@@ -1,19 +1,26 @@
 #!/bin/bash
 
 # ==========================================
-# AUTO INSTALLER FOR PREMIUM PANEL
+# AUTO INSTALLER FOR PREMIUM PANEL (MULTI-PROTOCOL)
+# Supports: VMess, VLess, Trojan, Socks5, HTTP
 # ==========================================
 
-echo -e "\e[34m[1/5] Updating System & Installing Dependencies...\e[0m"
-apt update && apt upgrade -y
-apt install -y redis-server jq curl uuid-runtime unzip socat
+# Warna
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+NC='\033[0m'
 
-echo -e "\e[34m[2/5] Installing Xray Core (Latest)...\e[0m"
-# Menggunakan script install resmi Xray
+echo -e "${BLUE}[1/5] Updating System & Installing Dependencies...${NC}"
+apt update && apt upgrade -y
+apt install -y redis-server jq curl uuid-runtime unzip socat git
+
+echo -e "${BLUE}[2/5] Installing Xray Core (Latest)...${NC}"
+# Install Xray Official
 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 
-echo -e "\e[34m[3/5] Configuring Basic Xray JSON...\e[0m"
-# Membuat config dasar yang kompatibel dengan panel.sh
+echo -e "${BLUE}[3/5] Configuring Xray JSON (Multi-Protocol)...${NC}"
+# Membuat config.json yang kompatibel dengan Logic Panel.sh
+# Port Default: VMess=8080, VLess=2082, Trojan=2087, Socks=1080, HTTP=8081
 cat > /etc/xray/config.json << ENDOFFILE
 {
   "log": {
@@ -21,7 +28,8 @@ cat > /etc/xray/config.json << ENDOFFILE
   },
   "inbounds": [
     {
-      "port": 443,
+      "tag": "vmess",
+      "port": 8080,
       "protocol": "vmess",
       "settings": {
         "clients": []
@@ -32,32 +40,80 @@ cat > /etc/xray/config.json << ENDOFFILE
           "path": "/vmess"
         }
       }
+    },
+    {
+      "tag": "vless",
+      "port": 2082,
+      "protocol": "vless",
+      "settings": {
+        "clients": [],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/vless"
+        }
+      }
+    },
+    {
+      "tag": "trojan",
+      "port": 2087,
+      "protocol": "trojan",
+      "settings": {
+        "clients": []
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "none"
+      }
+    },
+    {
+      "tag": "socks",
+      "port": 1080,
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      }
+    },
+    {
+      "tag": "http",
+      "port": 8081,
+      "protocol": "http",
+      "settings": {}
     }
   ],
   "outbounds": [
     {
       "protocol": "freedom",
       "settings": {}
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "blocked",
+      "settings": {}
     }
   ]
 }
 ENDOFFILE
 
-echo -e "\e[34m[4/5] Installing Panel Script...\e[0m"
-# Anggap panel.sh ada di repo yang sama, atau copy manual content-nya
-# Disini kita buat dummy command agar user paste panel.sh nanti
-touch /usr/bin/menu
-chmod +x /usr/bin/menu
-
-echo -e "\e[34m[5/5] Finishing Setup...\e[0m"
+echo -e "${BLUE}[4/5] Preparing Database & Environment...${NC}"
+# Enable Services
 systemctl enable redis-server
 systemctl restart redis-server
 systemctl enable xray
 systemctl restart xray
 
-echo -e "\e[32m=============================================\e[0m"
-echo -e "\e[32m       INSTALLATION COMPLETED!               \e[0m"
-echo -e "\e[32m=============================================\e[0m"
-echo -e "Silahkan copy isi file 'panel.sh' ke VPS Anda:"
-echo -e "Command: nano /usr/bin/menu"
-echo -e "Lalu paste kode panel.sh, save, dan ketik 'menu' untuk mulai."
+# Buat dummy menu command
+touch /usr/bin/menu
+chmod +x /usr/bin/menu
+
+echo -e "${GREEN}=============================================${NC}"
+echo -e "${GREEN}       INSTALLATION COMPLETED!               ${NC}"
+echo -e "${GREEN}=============================================${NC}"
+echo -e "Langkah Selanjutnya:"
+echo -e "1. Edit file menu: nano /usr/bin/menu"
+echo -e "2. Paste kode 'panel.sh' ke dalamnya."
+echo -e "3. Simpan & Exit."
+echo -e "4. Ketik 'menu' untuk masuk ke dashboard."
