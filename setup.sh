@@ -10,7 +10,7 @@
 # --- KONFIGURASI SUMBER FILE (ISI DENGAN LINK GITHUB KAMU) ---
 # Pastikan link ini mengarah ke file panel.sh versi "RAW"
 # Contoh: https://raw.githubusercontent.com/username/repo/main/panel.sh
-LINK_PANEL_SH="https://raw.githubusercontent.com/Keenzhio/Premium-panel-proxy/refs/heads/main/panel.sh"
+LINK_PANEL_SH="https://raw.githubusercontent.com/Keenzhio/Premium-panel-proxy/main/panel.sh"
 
 # Warna
 BLUE='\033[0;34m'
